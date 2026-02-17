@@ -15,7 +15,7 @@ import {
 } from '@/lib/utils';
 import { checkConflict } from '@/lib/store';
 import { checkForDuplicateBooking, shouldBlockBooking } from '@/lib/antiSpam';
-import { WORKING_HOURS, DAYS_AHEAD, SERVICES } from '@/lib/constants';
+import { WORKING_HOURS, DAYS_AHEAD, SERVICES, toLeva } from '@/lib/constants';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 
@@ -479,7 +479,7 @@ export default function CalendarView({ appointments, barbers, onUpdateStatus, on
                               {service && (
                                 <span className="flex items-center gap-1.5">
                                   <Clock className="w-3.5 h-3.5 text-lime/70" />
-                                  {service.durationMinutes} мин · {service.price} лв
+                                  {service.durationMinutes} мин · {service.price} € ({toLeva(service.price)} лв)
                                 </span>
                               )}
                             </div>
@@ -683,7 +683,7 @@ export default function CalendarView({ appointments, barbers, onUpdateStatus, on
                                         <option value="" className="bg-surface text-white/40">Изберете...</option>
                                         {SERVICES.map((s) => (
                                           <option key={s.id} value={s.id} className="bg-surface text-white">
-                                            {s.name} — {s.price} лв
+                                            {s.name} — {s.price} € ({toLeva(s.price)} лв)
                                           </option>
                                         ))}
                                       </select>

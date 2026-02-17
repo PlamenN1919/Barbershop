@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 import { ArrowLeft, Check, Calendar, Clock, User, Scissors, MapPin } from 'lucide-react';
 import { BookingFormData } from '@/lib/types';
-import { SERVICES } from '@/lib/constants';
+import { SERVICES, toLeva } from '@/lib/constants';
 import { getBarbers } from '@/lib/store';
 import { formatDateFull, formatTime } from '@/lib/utils';
 import Button from '@/components/ui/Button';
@@ -90,7 +90,7 @@ export default function Confirmation({
           </div>
           <div className="text-right">
             <p className="text-white font-medium text-sm">{service?.name}</p>
-            <p className="text-lime font-heading font-bold">{service?.price} лв.</p>
+            <p className="text-lime font-heading font-bold">{service?.price} € <span className="text-white/30 text-xs font-normal">/ {service ? toLeva(service.price) : ''} лв.</span></p>
           </div>
         </div>
 

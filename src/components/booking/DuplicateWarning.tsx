@@ -5,7 +5,7 @@ import { AlertTriangle, Calendar, Clock, CheckCircle, X } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { DuplicateCheckResult } from '@/lib/antiSpam';
 import { Appointment } from '@/lib/types';
-import { SERVICES, BARBERS } from '@/lib/constants';
+import { SERVICES, BARBERS, toLeva } from '@/lib/constants';
 import { formatDateFull, formatTime } from '@/lib/utils';
 
 interface DuplicateWarningProps {
@@ -90,7 +90,7 @@ export default function DuplicateWarning({
                         {service?.name || 'Услуга'}
                       </span>
                       <span className="text-lime text-xs font-heading font-bold">
-                        {service?.price} лв.
+                        {service?.price} € / {service ? toLeva(service.price) : ''} лв.
                       </span>
                     </div>
                     <div className="flex items-center gap-4 text-xs text-white/40">

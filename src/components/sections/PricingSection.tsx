@@ -3,7 +3,7 @@
 import { motion, useInView } from 'framer-motion';
 import { useRef } from 'react';
 import { Check, Clock, Star } from 'lucide-react';
-import { SERVICES } from '@/lib/constants';
+import { SERVICES, toLeva } from '@/lib/constants';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -96,7 +96,10 @@ export default function PricingSection() {
                 <div className="flex items-end justify-between">
                   <div>
                     <span className="font-heading font-bold text-3xl text-white">
-                      {service.price} лв.
+                      {service.price} €
+                    </span>
+                    <span className="text-white/30 text-sm">
+                      / {toLeva(service.price)} лв.
                     </span>
                   </div>
                   <button

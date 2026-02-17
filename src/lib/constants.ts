@@ -1,10 +1,18 @@
 import { Service, Barber, Testimonial } from './types';
 
+// Фиксиран курс EUR/BGN
+export const EUR_TO_BGN = 1.95583;
+
+/** Конвертира евро в лева */
+export function toLeva(eur: number): string {
+  return (eur * EUR_TO_BGN).toFixed(2);
+}
+
 export const SERVICES: Service[] = [
   {
     id: 'classic-haircut',
     name: 'Класическо Подстригване',
-    price: 35,
+    price: 15,
     durationMinutes: 30,
     description: 'Прецизно подстригване, съобразено с вашия стил. Включва измиване и оформяне.',
     icon: 'Scissors',
@@ -12,7 +20,7 @@ export const SERVICES: Service[] = [
   {
     id: 'fade-haircut',
     name: 'Подстригване Фейд',
-    price: 40,
+    price: 18,
     durationMinutes: 40,
     description: 'Модерен фейд с плавни преходи и перфектни линии. За тези, които искат стил.',
     icon: 'Zap',
@@ -20,7 +28,7 @@ export const SERVICES: Service[] = [
   {
     id: 'beard-trim',
     name: 'Оформяне на Брада',
-    price: 25,
+    price: 8,
     durationMinutes: 20,
     description: 'Експертно оформяне на брада с гореща кърпа и прецизни линии.',
     icon: 'Sparkles',
@@ -28,7 +36,7 @@ export const SERVICES: Service[] = [
   {
     id: 'combo',
     name: 'Прическа + Брада',
-    price: 50,
+    price: 25,
     durationMinutes: 45,
     description: 'Пълният пакет — подстригване и оформяне на брада. Излез като нов човек.',
     icon: 'Crown',
@@ -36,7 +44,7 @@ export const SERVICES: Service[] = [
   {
     id: 'eyebrow-threading',
     name: 'Вежди с Конец',
-    price: 15,
+    price: 4,
     durationMinutes: 15,
     description: 'Прецизно оформяне на вежди с традиционна техника на конец.',
     icon: 'Eye',
@@ -44,15 +52,15 @@ export const SERVICES: Service[] = [
   {
     id: 'wax-treatment',
     name: 'Кола Маска — Нос и Уши',
-    price: 20,
+    price: 4,
     durationMinutes: 15,
-    description: 'Почистване с гореща кола маска за нос и уши. Гладък завършек.',
+    description: 'Почистване с гореща кола маска за нос и уши. Цена на зона. Гладък завършек.',
     icon: 'Flame',
   },
   {
     id: 'face-mask',
     name: 'Маска за Лице',
-    price: 30,
+    price: 3,
     durationMinutes: 25,
     description: 'Освежаваща маска за лице с премиум продукти. Релаксирай и освежи кожата си.',
     icon: 'Sparkle',

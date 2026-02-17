@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react';
 import { motion, useInView, AnimatePresence } from 'framer-motion';
 import { Plus, Minus, Clock } from 'lucide-react';
-import { SERVICES } from '@/lib/constants';
+import { SERVICES, toLeva } from '@/lib/constants';
 
 export default function ServicesAccordion() {
   const [openId, setOpenId] = useState<string | null>(null);
@@ -68,7 +68,8 @@ export default function ServicesAccordion() {
                             <span>{service.durationMinutes} минути</span>
                           </div>
                           <div className="font-heading font-bold text-2xl text-lime">
-                            {service.price} лв.
+                            {service.price} €
+                            <span className="text-sm text-white/30 font-normal ml-1">/ {toLeva(service.price)} лв.</span>
                           </div>
                         </div>
                       </div>

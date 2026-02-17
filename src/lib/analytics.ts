@@ -389,7 +389,7 @@ export function getPreviousPeriod(period: DateRangePeriod): DateRangePeriod {
  * Форматира валута
  */
 export function formatCurrency(amount: number): string {
-  return `${amount.toFixed(2)} лв.`;
+  return `${amount.toFixed(2)} €`;
 }
 
 /**

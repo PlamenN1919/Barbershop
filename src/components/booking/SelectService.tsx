@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { Scissors, Sparkles, Crown, Zap, Clock, ArrowRight, Eye, Flame, Sparkle } from 'lucide-react';
-import { SERVICES } from '@/lib/constants';
+import { SERVICES, toLeva } from '@/lib/constants';
 import Card from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
@@ -71,7 +71,7 @@ export default function SelectService({ selectedId, onSelect, onNext }: SelectSe
                   <h4 className="font-heading font-bold text-sm uppercase text-white mb-1">{service.name}</h4>
                   <p className="text-white/30 text-xs mb-3">{service.description}</p>
                   <div className="flex items-center justify-between">
-                    <span className="text-lime font-heading font-bold text-lg">{service.price} лв.</span>
+                    <span className="text-lime font-heading font-bold text-lg">{service.price} € <span className="text-white/30 text-sm font-normal">/ {toLeva(service.price)} лв.</span></span>
                     <div className="flex items-center gap-1 text-white/25 text-xs">
                       <Clock className="w-3 h-3" />
                       <span>{service.durationMinutes} мин</span>
