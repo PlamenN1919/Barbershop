@@ -66,11 +66,9 @@ export default function HeroSection() {
             <AnimatedGroup variants={transitionVariants}>
               {/* Бадж / етикет */}
               <a
-                href="#booking"
-                onClick={(e) => {
-                  e.preventDefault();
-                  scrollToBooking();
-                }}
+                href="https://www.google.com/maps/place/Snnake+Barbershop-Царево/@42.169122,27.8501496,17.06z/data=!4m6!3m5!1s0x40a12fa075da1f75:0x8c56a9fb53aea21f!8m2!3d42.1690446!4d27.8502733!16s%2Fg%2F11kpznplm6?hl=bg&entry=ttu&g_ep=EgoyMDI2MDIxMS4wIKXMDSoASAFQAw%3D%3D"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="group mx-auto flex w-fit items-center gap-4 rounded-full border border-white/[0.08] bg-surface p-1 pl-4 shadow-md shadow-black/20 transition-all duration-300 hover:border-lime/30"
               >
                 <span className="text-white/50 text-sm">

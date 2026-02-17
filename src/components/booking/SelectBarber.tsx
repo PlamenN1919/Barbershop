@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Star, ArrowRight, ArrowLeft, User, Loader2 } from 'lucide-react';
+import { ArrowRight, ArrowLeft, User, Loader2 } from 'lucide-react';
 import { apiGetBarbers } from '@/lib/api';
 import { Barber } from '@/lib/types';
 import { isValidPhotoUrl } from '@/lib/utils';
@@ -91,12 +91,6 @@ export default function SelectBarber({ selectedId, onSelect, onNext, onBack }: S
               <Badge variant="lime" className="mb-3">
                 {barber.specialty}
               </Badge>
-
-              <div className="flex items-center justify-center gap-1 mt-2">
-                <Star className="w-3.5 h-3.5 text-lime fill-lime" />
-                <span className="text-white text-sm font-medium">{barber.rating}</span>
-                <span className="text-white/25 text-xs">({barber.reviewCount} отзива)</span>
-              </div>
             </Card>
           </motion.div>
         ))}

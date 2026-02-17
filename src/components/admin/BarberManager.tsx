@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Trash2, X, User, Star, Camera, ImageIcon } from 'lucide-react';
+import { Plus, Trash2, X, User, Camera, ImageIcon } from 'lucide-react';
 import { Barber } from '@/lib/types';
 import { fileToBase64, isValidPhotoUrl } from '@/lib/utils';
 import Button from '@/components/ui/Button';
@@ -274,12 +274,6 @@ export default function BarberManager({ barbers, onAdd, onRemove }: BarberManage
                       )}
                     </div>
                     <p className="text-white/40 text-xs mt-0.5">{barber.specialty}</p>
-                    <div className="flex items-center gap-1 mt-1">
-                      <Star className="w-3 h-3 text-lime fill-lime" />
-                      <span className="text-white/50 text-xs">
-                        {barber.rating} ({barber.reviewCount} отзива)
-                      </span>
-                    </div>
                   </div>
                 </div>
 
