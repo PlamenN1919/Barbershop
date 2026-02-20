@@ -125,7 +125,7 @@ export async function apiCreateAppointment(
   return fetchJSON<CreateAppointmentResult>(`${BASE_URL}/appointments`, {
     method: 'POST',
     body: JSON.stringify({
-      serviceId: formData.serviceId,
+      serviceIds: formData.serviceIds,
       barberId: formData.barberId,
       date: formData.date,
       time: formData.time,

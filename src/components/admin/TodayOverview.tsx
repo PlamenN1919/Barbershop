@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sun, Clock, Scissors, User, Phone, ChevronRight, CalendarCheck } from 'lucide-react';
 import { Appointment, Barber } from '@/lib/types';
-import { SERVICES } from '@/lib/constants';
+import { SERVICES, getServiceIdsFromAppointment } from '@/lib/constants';
 import { formatTime } from '@/lib/utils';
 import Badge from '@/components/ui/Badge';
 
@@ -65,7 +65,8 @@ export default function TodayOverview({ appointments, barbers }: TodayOverviewPr
       <div className="space-y-1.5">
         <AnimatePresence>
           {todayAppointments.map((apt, idx) => {
-            const service = SERVICES.find((s) => s.id === apt.serviceId);
+            const svcIds = getServiceIdsFromAppointment(apt.serviceId);
+            const serviceNames = svcIds.map(id => SERVICES.find(s => s.id === id)?.name).filter(Boolean).join(', ') || '—';
             const barber = barbers.find((b) => b.id === apt.barberId);
             const isNext = idx === nextAptIndex;
             const isPast = apt.appointmentTime < currentTimeStr;
@@ -112,7 +113,7 @@ export default function TodayOverview({ appointments, barbers }: TodayOverviewPr
                   <div className="flex items-center gap-3 text-xs text-white/35 mt-0.5">
                     <span className="flex items-center gap-1">
                       <Scissors className="w-3 h-3" />
-                      {service?.name || '—'}
+                      {serviceNames}
                     </span>
                     <span className="flex items-center gap-1">
                       <User className="w-3 h-3" />

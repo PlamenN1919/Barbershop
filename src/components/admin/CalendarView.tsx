@@ -15,7 +15,7 @@ import {
 } from '@/lib/utils';
 import { checkConflict } from '@/lib/store';
 import { checkForDuplicateBooking, shouldBlockBooking } from '@/lib/antiSpam';
-import { WORKING_HOURS, DAYS_AHEAD, SERVICES, toLeva } from '@/lib/constants';
+import { WORKING_HOURS, DAYS_AHEAD, SERVICES, toLeva, getServiceIdsFromAppointment } from '@/lib/constants';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 
@@ -197,7 +197,7 @@ export default function CalendarView({ appointments, barbers, onUpdateStatus, on
 
     // Проверка за дублирани/спам резервации
     const formData: BookingFormData = {
-      serviceId: form.serviceId,
+      serviceIds: [form.serviceId],
       barberId: form.barberId,
       date: selectedDate,
       time: bookingSlot,
@@ -410,7 +410,9 @@ export default function CalendarView({ appointments, barbers, onUpdateStatus, on
                 cancelled: { variant: 'red', label: 'Отказан' },
               };
 
-              const service = apt ? SERVICES.find((s) => s.id === apt.serviceId) : null;
+              const aptServiceIds = apt ? getServiceIdsFromAppointment(apt.serviceId) : [];
+              const service = apt ? aptServiceIds.map(id => SERVICES.find(s => s.id === id)).filter(Boolean) : [];
+              const serviceName = service.map(s => s!.name).join(', ') || null;
               const barber = apt ? barbers.find((b) => b.id === apt.barberId) : null;
               const status = apt ? statusConfig[apt.status] : null;
 
@@ -466,7 +468,7 @@ export default function CalendarView({ appointments, barbers, onUpdateStatus, on
                             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-white/40">
                               <span className="flex items-center gap-1.5">
                                 <Scissors className="w-3.5 h-3.5 text-lime/70" />
-                                {service?.name || 'Неизвестна'}
+                                {serviceName || 'Неизвестна'}
                               </span>
                               <span className="flex items-center gap-1.5">
                                 <User className="w-3.5 h-3.5 text-lime/70" />
@@ -476,10 +478,10 @@ export default function CalendarView({ appointments, barbers, onUpdateStatus, on
                                 <Phone className="w-3.5 h-3.5 text-lime/70" />
                                 {apt.customerPhone}
                               </span>
-                              {service && (
+                              {service.length > 0 && (
                                 <span className="flex items-center gap-1.5">
                                   <Clock className="w-3.5 h-3.5 text-lime/70" />
-                                  {service.durationMinutes} мин · {service.price} € ({toLeva(service.price)} лв)
+                                  {service.reduce((sum, s) => sum + (s?.durationMinutes || 0), 0)} мин · {service.reduce((sum, s) => sum + (s?.price || 0), 0)} € ({toLeva(service.reduce((sum, s) => sum + (s?.price || 0), 0))} лв)
                                 </span>
                               )}
                             </div>

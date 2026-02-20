@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 import { Calendar, Clock, User, Phone, Check, X, Scissors, Trash2, AlertTriangle, Info } from 'lucide-react';
 import { Appointment } from '@/lib/types';
-import { SERVICES } from '@/lib/constants';
+import { SERVICES, getServiceIdsFromAppointment } from '@/lib/constants';
 import { getBarbers } from '@/lib/store';
 import { formatDate, formatTime } from '@/lib/utils';
 import Badge from '@/components/ui/Badge';
@@ -23,7 +23,9 @@ const statusConfig = {
 };
 
 export default function AppointmentCard({ appointment, onUpdateStatus, onDelete }: AppointmentCardProps) {
-  const service = SERVICES.find((s) => s.id === appointment.serviceId);
+  const serviceIds = getServiceIdsFromAppointment(appointment.serviceId);
+  const services = serviceIds.map(id => SERVICES.find(s => s.id === id)).filter(Boolean);
+  const serviceName = services.map(s => s!.name).join(', ') || 'Неизвестна';
   const barber = getBarbers().find((b) => b.id === appointment.barberId);
   const status = statusConfig[appointment.status];
   const [showFlagDetails, setShowFlagDetails] = useState(false);
@@ -58,7 +60,7 @@ export default function AppointmentCard({ appointment, onUpdateStatus, onDelete 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-white/50">
             <div className="flex items-center gap-2">
               <Scissors className="w-4 h-4 text-lime" />
-              <span>{service?.name || 'Неизвестна'}</span>
+              <span>{serviceName}</span>
             </div>
             <div className="flex items-center gap-2">
               <User className="w-4 h-4 text-lime" />

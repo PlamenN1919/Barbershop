@@ -1,12 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BookingFormData, BookingStep } from '@/lib/types';
-import { apiCreateAppointment, APIError } from '@/lib/api';
+import { BookingFormData, BookingStep, Barber } from '@/lib/types';
+import { apiCreateAppointment, apiGetBarbers, APIError } from '@/lib/api';
 import { DuplicateCheckResult } from '@/lib/antiSpam';
 import StepIndicator from '@/components/ui/StepIndicator';
 import SelectService from './SelectService';
@@ -17,7 +17,7 @@ import Confirmation from './Confirmation';
 import DuplicateWarning from './DuplicateWarning';
 
 const bookingSchema = z.object({
-  serviceId: z.string().min(1, 'Моля, изберете услуга'),
+  serviceIds: z.array(z.string()).min(1, 'Моля, изберете поне една услуга'),
   barberId: z.string().min(1, 'Моля, изберете бръснар'),
   date: z.string().min(1, 'Моля, изберете дата'),
   time: z.string().min(1, 'Моля, изберете час'),
@@ -51,6 +51,11 @@ export default function BookingForm() {
   const [showDuplicateWarning, setShowDuplicateWarning] = useState(false);
   const [duplicateCheckResult, setDuplicateCheckResult] = useState<DuplicateCheckResult | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [barbers, setBarbers] = useState<Barber[]>([]);
+
+  useEffect(() => {
+    apiGetBarbers().then(setBarbers).catch(() => {});
+  }, []);
 
   const {
     register,
@@ -61,7 +66,7 @@ export default function BookingForm() {
   } = useForm<BookingFormData>({
     resolver: zodResolver(bookingSchema),
     defaultValues: {
-      serviceId: '',
+      serviceIds: [],
       barberId: '',
       date: '',
       time: '',
@@ -155,8 +160,14 @@ export default function BookingForm() {
           >
             {step === 1 && (
               <SelectService
-                selectedId={formData.serviceId}
-                onSelect={(id) => setValue('serviceId', id)}
+                selectedIds={formData.serviceIds}
+                onToggle={(id) => {
+                  const current = formData.serviceIds;
+                  const next = current.includes(id)
+                    ? current.filter((s) => s !== id)
+                    : [...current, id];
+                  setValue('serviceIds', next);
+                }}
                 onNext={goNext}
               />
             )}
@@ -200,6 +211,7 @@ export default function BookingForm() {
             {step === 5 && (
               <Confirmation
                 formData={formData}
+                barberName={barbers.find((b) => b.id === formData.barberId)?.name || ''}
                 onBack={goBack}
                 onConfirm={handleConfirm}
                 isSubmitting={isSubmitting}

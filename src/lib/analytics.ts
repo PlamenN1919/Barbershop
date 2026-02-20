@@ -1,5 +1,5 @@
 import { Appointment, Barber, Service, AnalyticsData, DateRangePeriod, RevenueMetrics, CustomerMetrics, ProductivityMetrics, ServiceMetrics } from './types';
-import { SERVICES } from './constants';
+import { SERVICES, getServiceIdsFromAppointment } from './constants';
 
 /**
  * Генерира период от дати според избрания DateRange
@@ -82,22 +82,28 @@ export function calculateRevenueMetrics(
   const byBarber: Record<string, number> = {};
   
   filteredAppointments.forEach(apt => {
-    const service = getService(apt.serviceId);
-    const price = service?.price || 0;
-    
-    total += price;
-    
-    // По услуга
-    if (!byService[apt.serviceId]) {
-      byService[apt.serviceId] = 0;
-    }
-    byService[apt.serviceId] += price;
+    const svcIds = getServiceIdsFromAppointment(apt.serviceId);
+    let aptPrice = 0;
+
+    svcIds.forEach(svcId => {
+      const service = getService(svcId);
+      const price = service?.price || 0;
+      aptPrice += price;
+
+      // По услуга
+      if (!byService[svcId]) {
+        byService[svcId] = 0;
+      }
+      byService[svcId] += price;
+    });
+
+    total += aptPrice;
     
     // По бръснар
     if (!byBarber[apt.barberId]) {
       byBarber[apt.barberId] = 0;
     }
-    byBarber[apt.barberId] += price;
+    byBarber[apt.barberId] += aptPrice;
   });
   
   const average = filteredAppointments.length > 0 ? total / filteredAppointments.length : 0;
@@ -108,8 +114,11 @@ export function calculateRevenueMetrics(
     const prevCompleted = previousPeriodAppointments.filter(apt => apt.status === 'completed');
     let prevTotal = 0;
     prevCompleted.forEach(apt => {
-      const service = getService(apt.serviceId);
-      prevTotal += service?.price || 0;
+      const svcIds = getServiceIdsFromAppointment(apt.serviceId);
+      svcIds.forEach(svcId => {
+        const service = getService(svcId);
+        prevTotal += service?.price || 0;
+      });
     });
     
     if (prevTotal > 0) {
@@ -272,8 +281,11 @@ export function calculateProductivityMetrics(
   filteredAppointments
     .filter(apt => apt.status === 'completed' || apt.status === 'upcoming')
     .forEach(apt => {
-      const service = getService(apt.serviceId);
-      totalServiceHours += (service?.durationMinutes || 30) / 60;
+      const svcIds = getServiceIdsFromAppointment(apt.serviceId);
+      svcIds.forEach(svcId => {
+        const service = getService(svcId);
+        totalServiceHours += (service?.durationMinutes || 30) / 60;
+      });
     });
   
   const utilizationRate = totalWorkingHours > 0 ? (totalServiceHours / totalWorkingHours) * 100 : 0;
@@ -308,25 +320,29 @@ export function calculateServiceMetrics(
   });
   
   filteredAppointments.forEach(apt => {
-    const service = getService(apt.serviceId);
-    const price = service?.price || 0;
-    
-    // Общ брой и приход по услуга
-    if (!serviceCount[apt.serviceId]) {
-      serviceCount[apt.serviceId] = { count: 0, revenue: 0 };
-    }
-    serviceCount[apt.serviceId].count++;
-    if (apt.status === 'completed') {
-      serviceCount[apt.serviceId].revenue += price;
-    }
-    
-    // По бръснар
-    if (servicesByBarber[apt.barberId]) {
-      if (!servicesByBarber[apt.barberId][apt.serviceId]) {
-        servicesByBarber[apt.barberId][apt.serviceId] = 0;
+    const svcIds = getServiceIdsFromAppointment(apt.serviceId);
+
+    svcIds.forEach(svcId => {
+      const service = getService(svcId);
+      const price = service?.price || 0;
+
+      // Общ брой и приход по услуга
+      if (!serviceCount[svcId]) {
+        serviceCount[svcId] = { count: 0, revenue: 0 };
       }
-      servicesByBarber[apt.barberId][apt.serviceId]++;
-    }
+      serviceCount[svcId].count++;
+      if (apt.status === 'completed') {
+        serviceCount[svcId].revenue += price;
+      }
+
+      // По бръснар
+      if (servicesByBarber[apt.barberId]) {
+        if (!servicesByBarber[apt.barberId][svcId]) {
+          servicesByBarber[apt.barberId][svcId] = 0;
+        }
+        servicesByBarber[apt.barberId][svcId]++;
+      }
+    });
   });
   
   // Топ услуги

@@ -16,10 +16,16 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { serviceId, barberId, date, time, customerName, customerPhone } = body;
+    const { barberId, date, time, customerName, customerPhone } = body;
+    // Support both serviceIds (array) and legacy serviceId (string)
+    const serviceIds: string[] = body.serviceIds
+      ? (Array.isArray(body.serviceIds) ? body.serviceIds : [body.serviceIds])
+      : body.serviceId
+        ? [body.serviceId]
+        : [];
 
     // Validate required fields
-    if (!serviceId || !barberId || !date || !time || !customerName || !customerPhone) {
+    if (serviceIds.length === 0 || !barberId || !date || !time || !customerName || !customerPhone) {
       return NextResponse.json(
         { error: 'Всички полета са задължителни.' },
         { status: 400 }
@@ -53,7 +59,8 @@ export async function POST(request: NextRequest) {
 
     // Validate service exists
     const services = db.getServices();
-    if (!services.find((s) => s.id === serviceId)) {
+    const invalidService = serviceIds.find(id => !services.find((s) => s.id === id));
+    if (invalidService) {
       return NextResponse.json(
         { error: 'Избраната услуга не съществува.' },
         { status: 400 }
@@ -88,7 +95,7 @@ export async function POST(request: NextRequest) {
     const flagReason = spamCheck.warnings.length > 0 ? spamCheck.warnings.join('; ') : undefined;
 
     const appointment = db.addAppointment({
-      serviceId,
+      serviceId: serviceIds.join(','),
       barberId,
       customerName: customerName.trim(),
       customerPhone: customerPhone.trim(),

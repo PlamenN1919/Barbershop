@@ -110,7 +110,7 @@ export function addAppointment(
 ): Appointment {
   const appointment: Appointment = {
     id: `apt-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-    serviceId: formData.serviceId,
+    serviceId: formData.serviceIds.join(','),
     barberId: formData.barberId,
     customerName: formData.customerName,
     customerPhone: formData.customerPhone,

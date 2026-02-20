@@ -47,7 +47,7 @@ export interface BlockedSlot {
 }
 
 export interface BookingFormData {
-  serviceId: string;
+  serviceIds: string[];
   barberId: string;
   date: string;
   time: string;

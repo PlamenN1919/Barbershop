@@ -8,6 +8,32 @@ export function toLeva(eur: number): string {
   return (eur * EUR_TO_BGN).toFixed(2);
 }
 
+/** Извлича масив от serviceId-та от appointment (поддържа comma-separated) */
+export function getServiceIdsFromAppointment(serviceId: string): string[] {
+  return serviceId.split(',').map(s => s.trim()).filter(Boolean);
+}
+
+/** Намира услуга по ID */
+export function getServiceById(id: string): Service | undefined {
+  return SERVICES.find(s => s.id === id);
+}
+
+/** Изчислява обща цена за масив от serviceIds */
+export function getTotalPrice(serviceIds: string[]): number {
+  return serviceIds.reduce((sum, id) => {
+    const service = SERVICES.find(s => s.id === id);
+    return sum + (service?.price || 0);
+  }, 0);
+}
+
+/** Изчислява обща продължителност за масив от serviceIds */
+export function getTotalDuration(serviceIds: string[]): number {
+  return serviceIds.reduce((sum, id) => {
+    const service = SERVICES.find(s => s.id === id);
+    return sum + (service?.durationMinutes || 0);
+  }, 0);
+}
+
 export const SERVICES: Service[] = [
   {
     id: 'classic-haircut',
