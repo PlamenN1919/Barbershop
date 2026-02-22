@@ -4,18 +4,18 @@ import { isAuthenticated, unauthorizedResponse } from '@/lib/apiAuth';
 
 // GET /api/barbers — list all barbers (public: only active, admin: all)
 export async function GET(request: NextRequest) {
-  const isAdmin = isAuthenticated(request);
+  const isAdmin = await isAuthenticated(request);
   
   if (isAdmin) {
-    return NextResponse.json(db.getBarbers());
+    return NextResponse.json(await db.getBarbers());
   }
   
-  return NextResponse.json(db.getActiveBarbers());
+  return NextResponse.json(await db.getActiveBarbers());
 }
 
 // POST /api/barbers — add a new barber (admin only)
 export async function POST(request: NextRequest) {
-  if (!isAuthenticated(request)) {
+  if (!(await isAuthenticated(request))) {
     return unauthorizedResponse();
   }
 
@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const barber = db.addBarber({
+    const barber = await db.addBarber({
       name,
       photoUrl: photoUrl || '',
       specialty,

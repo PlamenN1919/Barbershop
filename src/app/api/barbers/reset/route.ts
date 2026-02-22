@@ -4,10 +4,10 @@ import { isAuthenticated, unauthorizedResponse } from '@/lib/apiAuth';
 
 // POST /api/barbers/reset — reset barbers to initial data (admin only)
 export async function POST(request: NextRequest) {
-  if (!isAuthenticated(request)) {
+  if (!(await isAuthenticated(request))) {
     return unauthorizedResponse();
   }
 
-  db.resetBarbers();
-  return NextResponse.json({ success: true, barbers: db.getBarbers() });
+  await db.resetBarbers();
+  return NextResponse.json({ success: true, barbers: await db.getBarbers() });
 }

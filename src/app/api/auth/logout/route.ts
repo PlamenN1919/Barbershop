@@ -4,7 +4,7 @@ import { deleteSession } from '@/lib/db';
 export async function POST(request: NextRequest) {
   const token = request.cookies.get('admin_session')?.value;
   if (token) {
-    deleteSession(token);
+    await deleteSession(token);
   }
 
   const response = NextResponse.json({ success: true });

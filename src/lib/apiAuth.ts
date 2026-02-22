@@ -5,10 +5,10 @@ import { validateSession } from '@/lib/db';
  * Помощна функция за проверка на админ сесия.
  * Връща true ако потребителят е автентикиран.
  */
-export function isAuthenticated(request: NextRequest): boolean {
+export async function isAuthenticated(request: NextRequest): Promise<boolean> {
   const token = request.cookies.get('admin_session')?.value;
   if (!token) return false;
-  return validateSession(token);
+  return await validateSession(token);
 }
 
 /**

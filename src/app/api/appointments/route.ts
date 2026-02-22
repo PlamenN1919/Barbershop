@@ -4,11 +4,11 @@ import { isAuthenticated, unauthorizedResponse } from '@/lib/apiAuth';
 
 // GET /api/appointments — list all appointments (admin only)
 export async function GET(request: NextRequest) {
-  if (!isAuthenticated(request)) {
+  if (!(await isAuthenticated(request))) {
     return unauthorizedResponse();
   }
 
-  const appointments = db.getAppointments();
+  const appointments = await db.getAppointments();
   return NextResponse.json(appointments);
 }
 
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate barber exists
-    const barber = db.getBarberById(barberId);
+    const barber = await db.getBarberById(barberId);
     if (!barber || !barber.isActive) {
       return NextResponse.json(
         { error: 'Избраният бръснар не е наличен.' },
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check for conflicts
-    const conflict = db.checkConflict(barberId, date, time);
+    const conflict = await db.checkConflict(barberId, date, time);
     if (conflict) {
       return NextResponse.json(
         { error: 'Този час вече е зает. Моля, изберете друг.' },
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Anti-spam check
-    const spamCheck = db.checkForDuplicateBooking(customerName, customerPhone, date, time);
+    const spamCheck = await db.checkForDuplicateBooking(customerName, customerPhone, date, time);
 
     // Block if rate limited
     if (spamCheck.existingBookings.length >= 5) {
@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
     const isFlagged = spamCheck.isSuspicious || spamCheck.isDuplicate;
     const flagReason = spamCheck.warnings.length > 0 ? spamCheck.warnings.join('; ') : undefined;
 
-    const appointment = db.addAppointment({
+    const appointment = await db.addAppointment({
       serviceId: serviceIds.join(','),
       barberId,
       customerName: customerName.trim(),

@@ -7,11 +7,11 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  if (!isAuthenticated(request)) {
+  if (!(await isAuthenticated(request))) {
     return unauthorizedResponse();
   }
 
-  const removed = db.removeBarber(params.id);
+  const removed = await db.removeBarber(params.id);
   if (!removed) {
     return NextResponse.json(
       { error: 'Бръснарят не е намерен.' },

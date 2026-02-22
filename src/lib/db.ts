@@ -1,45 +1,53 @@
 /**
- * Server-side JSON file database.
- * Данните се съхраняват в `data/` директорията.
- * Всяка колекция е отделен JSON файл.
+ * Server-side Supabase database.
+ * All data is stored in Supabase PostgreSQL.
  */
-import fs from 'fs';
-import path from 'path';
+import { supabase } from './supabase';
 import { Appointment, Barber, BlockedSlot } from './types';
-import { SERVICES, BARBERS as INITIAL_BARBERS } from './constants';
-
-const DATA_DIR = path.join(process.cwd(), 'data');
-
-// Ensure data directory exists
-function ensureDataDir() {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-  }
-}
+import { SERVICES, BARBERS as INITIAL_BARBERS, WORKING_HOURS } from './constants';
 
 // ============================================================
-// Generic read/write helpers
+// Mappers: DB row (snake_case) → App type (camelCase)
 // ============================================================
 
-function readJSON<T>(filename: string, defaultValue: T): T {
-  ensureDataDir();
-  const filePath = path.join(DATA_DIR, filename);
-  try {
-    if (!fs.existsSync(filePath)) {
-      writeJSON(filename, defaultValue);
-      return defaultValue;
-    }
-    const raw = fs.readFileSync(filePath, 'utf-8');
-    return JSON.parse(raw) as T;
-  } catch {
-    return defaultValue;
-  }
+function mapBarber(row: Record<string, unknown>): Barber {
+  return {
+    id: row.id as string,
+    name: row.name as string,
+    photoUrl: (row.photo_url as string) ?? '',
+    specialty: (row.specialty as string) ?? '',
+    isActive: (row.is_active as boolean) ?? true,
+    rating: parseFloat(String(row.rating)) || 5.0,
+    reviewCount: (row.review_count as number) ?? 0,
+  };
 }
 
-function writeJSON<T>(filename: string, data: T): void {
-  ensureDataDir();
-  const filePath = path.join(DATA_DIR, filename);
-  fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
+function mapAppointment(row: Record<string, unknown>): Appointment {
+  return {
+    id: row.id as string,
+    serviceId: row.service_id as string,
+    barberId: row.barber_id as string,
+    customerName: row.customer_name as string,
+    customerPhone: row.customer_phone as string,
+    customerEmail: (row.customer_email as string) ?? '',
+    appointmentDate: row.appointment_date as string,
+    appointmentTime: row.appointment_time as string,
+    status: row.status as 'upcoming' | 'completed' | 'cancelled',
+    createdAt: row.created_at as string,
+    isFlagged: (row.is_flagged as boolean) ?? false,
+    flagReason: (row.flag_reason as string) ?? undefined,
+  };
+}
+
+function mapBlockedSlot(row: Record<string, unknown>): BlockedSlot {
+  return {
+    id: row.id as string,
+    barberId: row.barber_id as string,
+    blockedDate: row.blocked_date as string,
+    startTime: (row.start_time as string) ?? null,
+    endTime: (row.end_time as string) ?? null,
+    reason: (row.reason as string) ?? '',
+  };
 }
 
 // ============================================================
@@ -54,232 +62,314 @@ export function getServices() {
 // Barbers
 // ============================================================
 
-export function getBarbers(): Barber[] {
-  return readJSON<Barber[]>('barbers.json', INITIAL_BARBERS);
+export async function getBarbers(): Promise<Barber[]> {
+  const { data, error } = await supabase.from('barbers').select('*');
+  if (error || !data || data.length === 0) return INITIAL_BARBERS;
+  return data.map(mapBarber);
 }
 
-export function getActiveBarbers(): Barber[] {
-  return getBarbers().filter((b) => b.isActive);
+export async function getActiveBarbers(): Promise<Barber[]> {
+  const { data, error } = await supabase
+    .from('barbers')
+    .select('*')
+    .eq('is_active', true);
+  if (error || !data || data.length === 0) return INITIAL_BARBERS.filter((b) => b.isActive);
+  return data.map(mapBarber);
 }
 
-export function getBarberById(id: string): Barber | undefined {
-  return getBarbers().find((b) => b.id === id);
+export async function getBarberById(id: string): Promise<Barber | undefined> {
+  const { data, error } = await supabase
+    .from('barbers')
+    .select('*')
+    .eq('id', id)
+    .single();
+  if (error || !data) return undefined;
+  return mapBarber(data);
 }
 
-export function saveBarbers(barbers: Barber[]): void {
-  writeJSON('barbers.json', barbers);
+export async function saveBarbers(barbers: Barber[]): Promise<void> {
+  await supabase.from('barbers').delete().neq('id', '');
+  const rows = barbers.map((b) => ({
+    id: b.id,
+    name: b.name,
+    photo_url: b.photoUrl,
+    specialty: b.specialty,
+    is_active: b.isActive,
+    rating: b.rating,
+    review_count: b.reviewCount,
+  }));
+  await supabase.from('barbers').insert(rows);
 }
 
-export function addBarber(data: Omit<Barber, 'id' | 'rating' | 'reviewCount'>): Barber {
+export async function addBarber(
+  data: Omit<Barber, 'id' | 'rating' | 'reviewCount'>
+): Promise<Barber> {
   const barber: Barber = {
     ...data,
     id: `barber-${Date.now()}-${Math.random().toString(36).slice(2, 5)}`,
     rating: 5.0,
     reviewCount: 0,
   };
-  const current = getBarbers();
-  current.push(barber);
-  saveBarbers(current);
+  await supabase.from('barbers').insert({
+    id: barber.id,
+    name: barber.name,
+    photo_url: barber.photoUrl,
+    specialty: barber.specialty,
+    is_active: barber.isActive,
+    rating: barber.rating,
+    review_count: barber.reviewCount,
+  });
   return barber;
 }
 
-export function removeBarber(id: string): boolean {
-  const current = getBarbers();
-  const updated = current.filter((b) => b.id !== id);
-  if (updated.length === current.length) return false;
-  saveBarbers(updated);
-  return true;
+export async function removeBarber(id: string): Promise<boolean> {
+  const { error } = await supabase.from('barbers').delete().eq('id', id);
+  return !error;
 }
 
-export function resetBarbers(): void {
-  saveBarbers(INITIAL_BARBERS);
+export async function resetBarbers(): Promise<void> {
+  await saveBarbers(INITIAL_BARBERS);
 }
 
 // ============================================================
 // Appointments
 // ============================================================
 
-export function getAppointments(): Appointment[] {
-  return readJSON<Appointment[]>('appointments.json', []);
+export async function getAppointments(): Promise<Appointment[]> {
+  const { data, error } = await supabase.from('appointments').select('*');
+  if (error || !data) return [];
+  return data.map(mapAppointment);
 }
 
-export function saveAppointments(appointments: Appointment[]): void {
-  writeJSON('appointments.json', appointments);
+export async function saveAppointments(appointments: Appointment[]): Promise<void> {
+  await supabase.from('appointments').delete().neq('id', '');
+  if (appointments.length === 0) return;
+  const rows = appointments.map((a) => ({
+    id: a.id,
+    service_id: a.serviceId,
+    barber_id: a.barberId,
+    customer_name: a.customerName,
+    customer_phone: a.customerPhone,
+    customer_email: a.customerEmail,
+    appointment_date: a.appointmentDate,
+    appointment_time: a.appointmentTime,
+    status: a.status,
+    created_at: a.createdAt,
+    is_flagged: a.isFlagged || false,
+    flag_reason: a.flagReason || null,
+  }));
+  await supabase.from('appointments').insert(rows);
 }
 
-export function getAppointmentById(id: string): Appointment | undefined {
-  return getAppointments().find((a) => a.id === id);
+export async function getAppointmentById(id: string): Promise<Appointment | undefined> {
+  const { data, error } = await supabase
+    .from('appointments')
+    .select('*')
+    .eq('id', id)
+    .single();
+  if (error || !data) return undefined;
+  return mapAppointment(data);
 }
 
-export function addAppointment(appointment: Omit<Appointment, 'id' | 'createdAt'>): Appointment {
+export async function addAppointment(
+  appointment: Omit<Appointment, 'id' | 'createdAt'>
+): Promise<Appointment> {
   const newApt: Appointment = {
     ...appointment,
     id: `apt-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
     createdAt: new Date().toISOString(),
   };
-  const current = getAppointments();
-  current.push(newApt);
-  saveAppointments(current);
+  await supabase.from('appointments').insert({
+    id: newApt.id,
+    service_id: newApt.serviceId,
+    barber_id: newApt.barberId,
+    customer_name: newApt.customerName,
+    customer_phone: newApt.customerPhone,
+    customer_email: newApt.customerEmail,
+    appointment_date: newApt.appointmentDate,
+    appointment_time: newApt.appointmentTime,
+    status: newApt.status,
+    created_at: newApt.createdAt,
+    is_flagged: newApt.isFlagged || false,
+    flag_reason: newApt.flagReason || null,
+  });
   return newApt;
 }
 
-export function updateAppointmentStatus(
+export async function updateAppointmentStatus(
   id: string,
   status: 'completed' | 'cancelled'
-): Appointment | null {
-  const appointments = getAppointments();
-  const idx = appointments.findIndex((a) => a.id === id);
-  if (idx === -1) return null;
-  appointments[idx] = { ...appointments[idx], status };
-  saveAppointments(appointments);
-  return appointments[idx];
+): Promise<Appointment | null> {
+  const { data, error } = await supabase
+    .from('appointments')
+    .update({ status })
+    .eq('id', id)
+    .select('*')
+    .single();
+  if (error || !data) return null;
+  return mapAppointment(data);
 }
 
-export function deleteAppointment(id: string): boolean {
-  const appointments = getAppointments();
-  const updated = appointments.filter((a) => a.id !== id);
-  if (updated.length === appointments.length) return false;
-  saveAppointments(updated);
-  return true;
+export async function deleteAppointment(id: string): Promise<boolean> {
+  const { error } = await supabase.from('appointments').delete().eq('id', id);
+  return !error;
 }
 
-export function rescheduleAppointment(
+export async function rescheduleAppointment(
   id: string,
   newDate: string,
   newTime: string,
   newBarberId?: string
-): { success: boolean; appointment?: Appointment; error?: string } {
-  const appointments = getAppointments();
-  const apt = appointments.find((a) => a.id === id);
+): Promise<{ success: boolean; appointment?: Appointment; error?: string }> {
+  const apt = await getAppointmentById(id);
   if (!apt) return { success: false, error: 'Резервацията не е намерена' };
 
   const targetBarberId = newBarberId || apt.barberId;
 
-  // Check for conflicts
-  const conflict = appointments.find(
-    (a) =>
-      a.barberId === targetBarberId &&
-      a.appointmentDate === newDate &&
-      a.appointmentTime === newTime &&
-      a.status === 'upcoming' &&
-      a.id !== id
-  );
+  const conflict = await checkConflict(targetBarberId, newDate, newTime, id);
   if (conflict) return { success: false, error: 'Има конфликт с друга резервация' };
 
-  const updated = appointments.map((a) =>
-    a.id === id
-      ? { ...a, appointmentDate: newDate, appointmentTime: newTime, barberId: targetBarberId }
-      : a
-  );
-  saveAppointments(updated);
-  return { success: true, appointment: updated.find((a) => a.id === id) };
+  const { data, error } = await supabase
+    .from('appointments')
+    .update({
+      appointment_date: newDate,
+      appointment_time: newTime,
+      barber_id: targetBarberId,
+    })
+    .eq('id', id)
+    .select('*')
+    .single();
+
+  if (error || !data) return { success: false, error: 'Грешка при обновяване' };
+  return { success: true, appointment: mapAppointment(data) };
 }
 
-/**
- * Check if there's a conflict for a specific barber at a date/time.
- */
-export function checkConflict(
+export async function checkConflict(
   barberId: string,
   date: string,
   time: string,
   excludeId?: string
-): Appointment | null {
-  const appointments = getAppointments();
-  return (
-    appointments.find(
-      (apt) =>
-        apt.barberId === barberId &&
-        apt.appointmentDate === date &&
-        apt.appointmentTime === time &&
-        apt.status === 'upcoming' &&
-        apt.id !== excludeId
-    ) || null
-  );
+): Promise<Appointment | null> {
+  let query = supabase
+    .from('appointments')
+    .select('*')
+    .eq('barber_id', barberId)
+    .eq('appointment_date', date)
+    .eq('appointment_time', time)
+    .eq('status', 'upcoming');
+
+  if (excludeId) {
+    query = query.neq('id', excludeId);
+  }
+
+  const { data, error } = await query.limit(1);
+  if (error || !data || data.length === 0) return null;
+  return mapAppointment(data[0]);
 }
 
 // ============================================================
 // Blocked Slots
 // ============================================================
 
-export function getBlockedSlots(): BlockedSlot[] {
-  return readJSON<BlockedSlot[]>('blocked-slots.json', []);
+export async function getBlockedSlots(): Promise<BlockedSlot[]> {
+  const { data, error } = await supabase.from('blocked_slots').select('*');
+  if (error || !data) return [];
+  return data.map(mapBlockedSlot);
 }
 
-export function saveBlockedSlots(slots: BlockedSlot[]): void {
-  writeJSON('blocked-slots.json', slots);
+export async function saveBlockedSlots(slots: BlockedSlot[]): Promise<void> {
+  await supabase.from('blocked_slots').delete().neq('id', '');
+  if (slots.length === 0) return;
+  const rows = slots.map((s) => ({
+    id: s.id,
+    barber_id: s.barberId,
+    blocked_date: s.blockedDate,
+    start_time: s.startTime,
+    end_time: s.endTime,
+    reason: s.reason,
+  }));
+  await supabase.from('blocked_slots').insert(rows);
 }
 
-export function getBlockedSlotsForBarber(barberId: string, date?: string): BlockedSlot[] {
-  const slots = getBlockedSlots();
-  return slots.filter((s) => {
-    if (s.barberId !== barberId) return false;
-    if (date && s.blockedDate !== date) return false;
-    return true;
-  });
+export async function getBlockedSlotsForBarber(
+  barberId: string,
+  date?: string
+): Promise<BlockedSlot[]> {
+  let query = supabase
+    .from('blocked_slots')
+    .select('*')
+    .eq('barber_id', barberId);
+  if (date) {
+    query = query.eq('blocked_date', date);
+  }
+  const { data, error } = await query;
+  if (error || !data) return [];
+  return data.map(mapBlockedSlot);
 }
 
-export function addBlockedSlot(data: Omit<BlockedSlot, 'id'>): BlockedSlot {
+export async function addBlockedSlot(
+  data: Omit<BlockedSlot, 'id'>
+): Promise<BlockedSlot> {
   const slot: BlockedSlot = {
     ...data,
     id: `block-${Date.now()}-${Math.random().toString(36).slice(2, 5)}`,
   };
-  const current = getBlockedSlots();
-  current.push(slot);
-  saveBlockedSlots(current);
+  await supabase.from('blocked_slots').insert({
+    id: slot.id,
+    barber_id: slot.barberId,
+    blocked_date: slot.blockedDate,
+    start_time: slot.startTime,
+    end_time: slot.endTime,
+    reason: slot.reason,
+  });
   return slot;
 }
 
-export function removeBlockedSlot(id: string): boolean {
-  const current = getBlockedSlots();
-  const updated = current.filter((s) => s.id !== id);
-  if (updated.length === current.length) return false;
-  saveBlockedSlots(updated);
-  return true;
+export async function removeBlockedSlot(id: string): Promise<boolean> {
+  const { error } = await supabase.from('blocked_slots').delete().eq('id', id);
+  return !error;
 }
 
 // ============================================================
 // Available Time Slots (computed)
 // ============================================================
 
-import { WORKING_HOURS } from './constants';
-
-export function getAvailableSlots(barberId: string, date: string): { time: string; available: boolean }[] {
+export async function getAvailableSlots(
+  barberId: string,
+  date: string
+): Promise<{ time: string; available: boolean }[]> {
   const { start, end, slotDuration } = WORKING_HOURS;
   const slots: { time: string; available: boolean }[] = [];
 
-  // Get booked times for this barber on this date
-  const appointments = getAppointments();
-  const bookedTimes = appointments
-    .filter(
-      (a) =>
-        a.barberId === barberId &&
-        a.appointmentDate === date &&
-        a.status === 'upcoming'
-    )
-    .map((a) => a.appointmentTime);
+  // Get booked times
+  const { data: aptData } = await supabase
+    .from('appointments')
+    .select('appointment_time')
+    .eq('barber_id', barberId)
+    .eq('appointment_date', date)
+    .eq('status', 'upcoming');
+  const bookedTimes = (aptData || []).map(
+    (a: Record<string, unknown>) => a.appointment_time as string
+  );
 
   // Get blocked ranges
-  const blockedSlots = getBlockedSlotsForBarber(barberId, date);
+  const blockedSlots = await getBlockedSlotsForBarber(barberId, date);
   const blockedRanges = blockedSlots.map((s) => ({
     startTime: s.startTime,
     endTime: s.endTime,
   }));
 
-  // Generate all time slots
   for (let hour = start; hour < end; hour++) {
     for (let min = 0; min < 60; min += slotDuration) {
       const time = `${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`;
 
       const isBooked = bookedTimes.includes(time);
       const isBlocked = blockedRanges.some((range) => {
-        if (!range.startTime || !range.endTime) return true; // whole day blocked
+        if (!range.startTime || !range.endTime) return true;
         return time >= range.startTime && time < range.endTime;
       });
 
-      slots.push({
-        time,
-        available: !isBooked && !isBlocked,
-      });
+      slots.push({ time, available: !isBooked && !isBlocked });
     }
   }
 
@@ -316,13 +406,12 @@ function namesMatch(name1: string, name2: string): boolean {
   return normalizeName(name1) === normalizeName(name2);
 }
 
-function daysDifference(date1: string, date2: string): number {
-  const d1 = new Date(date1);
-  const d2 = new Date(date2);
-  return Math.ceil(Math.abs(d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24));
-}
-
-function hoursDifference(date1: string, time1: string, date2: string, time2: string): number {
+function hoursDifference(
+  date1: string,
+  time1: string,
+  date2: string,
+  time2: string
+): number {
   const dt1 = new Date(`${date1}T${time1}`);
   const dt2 = new Date(`${date2}T${time2}`);
   return Math.abs(dt2.getTime() - dt1.getTime()) / (1000 * 60 * 60);
@@ -336,12 +425,12 @@ const ANTI_SPAM_CONFIG = {
   flagPeriodHours: 2,
 };
 
-export function checkForDuplicateBooking(
+export async function checkForDuplicateBooking(
   customerName: string,
   customerPhone: string,
   date: string,
   time: string
-): DuplicateCheckResult {
+): Promise<DuplicateCheckResult> {
   const result: DuplicateCheckResult = {
     isDuplicate: false,
     isSuspicious: false,
@@ -349,7 +438,7 @@ export function checkForDuplicateBooking(
     warnings: [],
   };
 
-  const allAppointments = getAppointments();
+  const allAppointments = await getAppointments();
   const customerBookings = allAppointments.filter(
     (apt) =>
       apt.status === 'upcoming' &&
@@ -373,7 +462,9 @@ export function checkForDuplicateBooking(
   }
 
   // Check for same-day booking
-  const sameDayBooking = customerBookings.find((apt) => apt.appointmentDate === date);
+  const sameDayBooking = customerBookings.find(
+    (apt) => apt.appointmentDate === date
+  );
   if (sameDayBooking) {
     result.isDuplicate = true;
     result.reason = 'Вече имате резервация за този ден.';
@@ -392,7 +483,12 @@ export function checkForDuplicateBooking(
 
   // Check rapid booking
   const recentBookings = customerBookings.filter((apt) => {
-    const hours = hoursDifference(apt.appointmentDate, apt.appointmentTime, date, time);
+    const hours = hoursDifference(
+      apt.appointmentDate,
+      apt.appointmentTime,
+      date,
+      time
+    );
     return hours < ANTI_SPAM_CONFIG.flagPeriodHours;
   });
   if (recentBookings.length >= ANTI_SPAM_CONFIG.flagIfMoreThan) {
@@ -407,47 +503,38 @@ export function checkForDuplicateBooking(
 // Sessions
 // ============================================================
 
-interface Session {
-  token: string;
-  createdAt: string;
-  expiresAt: string;
-}
-
-function getSessions(): Session[] {
-  return readJSON<Session[]>('sessions.json', []);
-}
-
-function saveSessions(sessions: Session[]): void {
-  writeJSON('sessions.json', sessions);
-}
-
-export function createSession(): string {
+export async function createSession(): Promise<string> {
   const crypto = require('crypto');
   const token = crypto.randomUUID();
   const now = new Date();
-  const expires = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24 hours
+  const expires = new Date(now.getTime() + 24 * 60 * 60 * 1000);
 
-  const sessions = getSessions();
   // Clean expired sessions
-  const valid = sessions.filter((s) => new Date(s.expiresAt) > now);
-  valid.push({
+  await supabase
+    .from('sessions')
+    .delete()
+    .lt('expires_at', now.toISOString());
+
+  await supabase.from('sessions').insert({
     token,
-    createdAt: now.toISOString(),
-    expiresAt: expires.toISOString(),
+    created_at: now.toISOString(),
+    expires_at: expires.toISOString(),
   });
-  saveSessions(valid);
+
   return token;
 }
 
-export function validateSession(token: string): boolean {
+export async function validateSession(token: string): Promise<boolean> {
   if (!token) return false;
-  const sessions = getSessions();
-  const session = sessions.find((s) => s.token === token);
-  if (!session) return false;
-  return new Date(session.expiresAt) > new Date();
+  const { data, error } = await supabase
+    .from('sessions')
+    .select('expires_at')
+    .eq('token', token)
+    .single();
+  if (error || !data) return false;
+  return new Date(data.expires_at as string) > new Date();
 }
 
-export function deleteSession(token: string): void {
-  const sessions = getSessions();
-  saveSessions(sessions.filter((s) => s.token !== token));
+export async function deleteSession(token: string): Promise<void> {
+  await supabase.from('sessions').delete().eq('token', token);
 }

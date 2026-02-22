@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
   }
 
   // Validate barberId
-  const barber = db.getBarberById(barberId);
+  const barber = await db.getBarberById(barberId);
   if (!barber) {
     return NextResponse.json(
       { error: 'Бръснарят не е намерен.' },
@@ -31,6 +31,6 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const slots = db.getAvailableSlots(barberId, date);
+  const slots = await db.getAvailableSlots(barberId, date);
   return NextResponse.json(slots);
 }

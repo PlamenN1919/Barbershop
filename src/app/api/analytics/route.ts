@@ -9,15 +9,15 @@ import {
 
 // GET /api/analytics?range=month — get analytics data (admin only)
 export async function GET(request: NextRequest) {
-  if (!isAuthenticated(request)) {
+  if (!(await isAuthenticated(request))) {
     return unauthorizedResponse();
   }
 
   const { searchParams } = new URL(request.url);
   const range = (searchParams.get('range') || 'month') as 'today' | 'week' | 'month' | 'year';
 
-  const appointments = db.getAppointments();
-  const barbers = db.getBarbers();
+  const appointments = await db.getAppointments();
+  const barbers = await db.getBarbers();
   const period = getDateRangePeriod(range);
   const previousPeriod = getPreviousPeriod(period);
 

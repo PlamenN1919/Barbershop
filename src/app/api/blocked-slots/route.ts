@@ -4,7 +4,7 @@ import { isAuthenticated, unauthorizedResponse } from '@/lib/apiAuth';
 
 // GET /api/blocked-slots — list all blocked slots (admin only)
 export async function GET(request: NextRequest) {
-  if (!isAuthenticated(request)) {
+  if (!(await isAuthenticated(request))) {
     return unauthorizedResponse();
   }
 
@@ -13,15 +13,15 @@ export async function GET(request: NextRequest) {
 
   if (barberId) {
     const date = searchParams.get('date') || undefined;
-    return NextResponse.json(db.getBlockedSlotsForBarber(barberId, date));
+    return NextResponse.json(await db.getBlockedSlotsForBarber(barberId, date));
   }
 
-  return NextResponse.json(db.getBlockedSlots());
+  return NextResponse.json(await db.getBlockedSlots());
 }
 
 // POST /api/blocked-slots — add a blocked slot (admin only)
 export async function POST(request: NextRequest) {
-  if (!isAuthenticated(request)) {
+  if (!(await isAuthenticated(request))) {
     return unauthorizedResponse();
   }
 
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const slot = db.addBlockedSlot({
+    const slot = await db.addBlockedSlot({
       barberId,
       blockedDate,
       startTime: startTime || null,

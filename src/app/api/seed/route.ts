@@ -5,12 +5,12 @@ import { generateTestAppointments } from '@/lib/generateTestData';
 
 // POST /api/seed — seed test data (admin only)
 export async function POST(request: NextRequest) {
-  if (!isAuthenticated(request)) {
+  if (!(await isAuthenticated(request))) {
     return unauthorizedResponse();
   }
 
   const testData = generateTestAppointments();
-  db.saveAppointments(testData);
+  await db.saveAppointments(testData);
 
   return NextResponse.json({
     success: true,

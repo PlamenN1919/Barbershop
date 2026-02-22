@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const token = createSession();
+    const token = await createSession();
 
     const response = NextResponse.json({ success: true });
     response.cookies.set('admin_session', token, {

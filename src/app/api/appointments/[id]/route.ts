@@ -7,7 +7,7 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  if (!isAuthenticated(request)) {
+  if (!(await isAuthenticated(request))) {
     return unauthorizedResponse();
   }
 
@@ -17,7 +17,7 @@ export async function PATCH(
 
     // Reschedule
     if (newDate && newTime) {
-      const result = db.rescheduleAppointment(params.id, newDate, newTime, newBarberId);
+      const result = await db.rescheduleAppointment(params.id, newDate, newTime, newBarberId);
       if (!result.success) {
         return NextResponse.json(
           { error: result.error || 'Грешка при пренасрочване.' },
@@ -29,7 +29,7 @@ export async function PATCH(
 
     // Status update
     if (status && (status === 'completed' || status === 'cancelled')) {
-      const updated = db.updateAppointmentStatus(params.id, status);
+      const updated = await db.updateAppointmentStatus(params.id, status);
       if (!updated) {
         return NextResponse.json(
           { error: 'Резервацията не е намерена.' },
@@ -56,11 +56,11 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  if (!isAuthenticated(request)) {
+  if (!(await isAuthenticated(request))) {
     return unauthorizedResponse();
   }
 
-  const deleted = db.deleteAppointment(params.id);
+  const deleted = await db.deleteAppointment(params.id);
   if (!deleted) {
     return NextResponse.json(
       { error: 'Резервацията не е намерена.' },
