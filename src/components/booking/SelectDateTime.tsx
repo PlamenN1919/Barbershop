@@ -156,8 +156,6 @@ export default function SelectDateTime({
                         ? 'bg-lime/10 text-lime border border-lime/20 hover:bg-lime/20'
                         : day.isAvailable && day.isCurrentMonth
                         ? 'text-white/70 hover:bg-surface-lighter hover:text-white'
-                        : day.isCurrentMonth && day.isSunday
-                        ? 'text-red-400/20 cursor-not-allowed'
                         : day.isCurrentMonth
                         ? 'text-white/10 cursor-not-allowed'
                         : 'text-white/[0.04] cursor-not-allowed'

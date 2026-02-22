@@ -97,7 +97,7 @@ export default function LoginForm({ onLogin }: LoginFormProps) {
           </Button>
 
           <p className="text-center text-white/20 text-xs mt-4">
-            Демо: admin@barbershop.com / admin123
+            Въведете вашите данни за вход
           </p>
         </form>
       </motion.div>

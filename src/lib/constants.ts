@@ -155,7 +155,7 @@ export const TESTIMONIALS: Testimonial[] = [
 ];
 
 export const WORKING_HOURS = {
-  start: 9, // 9:00
+  start: 10, // 10:00
   end: 20, // 20:00
   slotDuration: 30, // минути
 };

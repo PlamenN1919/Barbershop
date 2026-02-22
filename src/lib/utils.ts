@@ -9,7 +9,6 @@ export function cn(...inputs: (string | undefined | null | false)[]) {
 import {
   format,
   addDays,
-  isSunday,
   startOfMonth,
   endOfMonth,
   startOfWeek,
@@ -57,7 +56,7 @@ export function generateTimeSlots(
 }
 
 /**
- * Get the next N available dates (skipping Sundays).
+ * Get the next N available dates.
  */
 export function getAvailableDates(daysAhead: number): string[] {
   const dates: string[] = [];
@@ -65,9 +64,7 @@ export function getAvailableDates(daysAhead: number): string[] {
 
   for (let i = 0; i < daysAhead; i++) {
     const date = addDays(current, i);
-    if (!isSunday(date)) {
-      dates.push(format(date, 'yyyy-MM-dd'));
-    }
+    dates.push(format(date, 'yyyy-MM-dd'));
   }
 
   return dates;
@@ -120,9 +117,8 @@ export interface CalendarDay {
   dateStr: string;    // "yyyy-MM-dd"
   isCurrentMonth: boolean;
   isToday: boolean;
-  isSunday: boolean;
   isPast: boolean;
-  isAvailable: boolean; // within DAYS_AHEAD and not Sunday, not past
+  isAvailable: boolean; // within DAYS_AHEAD, not past
 }
 
 /**
@@ -155,14 +151,12 @@ export function getCalendarDays(monthDate: Date, availableDatesSet: Set<string>)
   return days.map((date) => {
     const dateStr = format(date, 'yyyy-MM-dd');
     const isPast = isBefore(date, today);
-    const sunday = isSunday(date);
 
     return {
       date,
       dateStr,
       isCurrentMonth: isSameMonth(date, monthDate),
       isToday: isSameDay(date, today),
-      isSunday: sunday,
       isPast,
       isAvailable: availableDatesSet.has(dateStr),
     };

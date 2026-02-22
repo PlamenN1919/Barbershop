@@ -38,7 +38,7 @@ export default function Footer() {
             </div>
             <p className="text-white/30 text-sm leading-relaxed max-w-xs">
               Премиум бръснарско изживяване в Царево.
-              Отворено понеделник &ndash; събота, 9:00 &ndash; 20:00 ч.
+              Отворено всеки ден, 10:00 &ndash; 20:00 ч.
             </p>
             <p className="text-white/20 text-sm mt-3">
               Център, ул. „Екзарх Йосиф" 11, 8260 Царево

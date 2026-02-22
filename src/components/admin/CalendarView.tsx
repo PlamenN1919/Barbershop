@@ -80,7 +80,7 @@ export default function CalendarView({ appointments, barbers, onUpdateStatus, on
     return map;
   }, [appointments]);
 
-  // Всички работни часове (9:00 - 19:30 на всеки 30 мин)
+  // Всички работни часове (10:00 - 19:30 на всеки 30 мин)
   const allTimeSlots = useMemo(() => {
     const slots: string[] = [];
     const { start, end, slotDuration } = WORKING_HOURS;
@@ -326,7 +326,6 @@ export default function CalendarView({ appointments, barbers, onUpdateStatus, on
                   relative flex flex-col items-center justify-start py-2 sm:py-3 min-h-[52px] sm:min-h-[64px] 
                   transition-all duration-150 
                   ${!day.isCurrentMonth ? 'opacity-20' : ''}
-                  ${day.isSunday && day.isCurrentMonth ? 'text-red-400/70' : ''}
                   ${day.isToday && !isSelected ? 'bg-lime/[0.06]' : ''}
                   ${isSelected ? 'bg-lime/20 ring-1 ring-lime/40' : 'bg-surface hover:bg-surface-light'}
                   ${day.isPast && !isSelected ? 'opacity-50' : ''}

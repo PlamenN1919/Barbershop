@@ -271,9 +271,9 @@ export function calculateProductivityMetrics(
     ? (cancelledCount / filteredAppointments.length) * 100 
     : 0;
   
-  // Утилизация (работни часове: 9-20, 11 часа на ден, 6 дни седмично)
-  const workingHoursPerDay = 11;
-  const workingDaysPerWeek = 6;
+  // Утилизация (работни часове: 10-20, 10 часа на ден, 7 дни седмично)
+  const workingHoursPerDay = 10;
+  const workingDaysPerWeek = 7;
   const weeksInPeriod = daysDiff / 7;
   const totalWorkingHours = workingHoursPerDay * workingDaysPerWeek * weeksInPeriod * barbers.length;
   
