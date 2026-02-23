@@ -160,4 +160,4 @@ export const WORKING_HOURS = {
   slotDuration: 30, // минути
 };
 
-export const DAYS_AHEAD = 14; // Показва слотове за следващите 14 дни
+export const DAYS_AHEAD = 365; // Показва слотове за следващите 365 дни (практически неограничено)

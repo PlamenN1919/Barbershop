@@ -18,7 +18,6 @@ import {
   apiAddBlockedSlot,
   apiRemoveBlockedSlot,
   apiGetAnalytics,
-  apiSeedTestData,
   apiLogin,
   apiLogout,
   apiVerifyAuth,
@@ -131,16 +130,6 @@ export default function AdminPage() {
     }
   }, []);
 
-  const handleGenerateTestData = useCallback(async () => {
-    if (window.confirm('Това ще генерира 50 тестови резервации за последните 3 месеца. Продължаваме?')) {
-      try {
-        await apiSeedTestData();
-        await refreshData();
-      } catch (err) {
-        console.error('Грешка:', err);
-      }
-    }
-  }, [refreshData]);
 
   const handleLogin = async (email: string, password: string) => {
     await apiLogin(email, password);
@@ -289,10 +278,6 @@ export default function AdminPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="secondary" size="sm" onClick={handleGenerateTestData}>
-              <BarChart3 className="w-4 h-4" />
-              Тест данни
-            </Button>
             <Button variant="secondary" size="sm" onClick={refreshData} disabled={isLoading}>
               {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
               Обнови

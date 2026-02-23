@@ -74,9 +74,10 @@ export default function SelectDateTime({
 
   // Month navigation limits
   const today = new Date();
-  const maxMonth = addMonths(today, 1);
-  const canGoPrev = currentMonth.getMonth() >= today.getMonth() && currentMonth.getFullYear() >= today.getFullYear();
-  const canGoNext = currentMonth.getMonth() < maxMonth.getMonth() || currentMonth.getFullYear() < maxMonth.getFullYear();
+  // Позволяваме навигация напред без ограничение (или до 12 месеца напред за UX)
+  const maxMonth = addMonths(today, 12);
+  const canGoPrev = currentMonth.getFullYear() > today.getFullYear() || (currentMonth.getFullYear() === today.getFullYear() && currentMonth.getMonth() > today.getMonth());
+  const canGoNext = currentMonth.getFullYear() < maxMonth.getFullYear() || (currentMonth.getFullYear() === maxMonth.getFullYear() && currentMonth.getMonth() < maxMonth.getMonth());
 
   const handleSelectDate = (dateStr: string) => {
     onSelectDate(dateStr);

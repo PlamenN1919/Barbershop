@@ -61,12 +61,10 @@ export function generateTimeSlots(
 export function getAvailableDates(daysAhead: number): string[] {
   const dates: string[] = [];
   const current = new Date();
-
   for (let i = 0; i < daysAhead; i++) {
     const date = addDays(current, i);
     dates.push(format(date, 'yyyy-MM-dd'));
   }
-
   return dates;
 }
 

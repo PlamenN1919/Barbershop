@@ -85,10 +85,6 @@ export default function PricingSection() {
                     <Check className="w-4 h-4 text-lime" />
                     <span>Премиум продукти включени</span>
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-white/50">
-                    <Clock className="w-4 h-4 text-lime" />
-                    <span>{service.durationMinutes} минути</span>
-                  </div>
                 </div>
 
                 <div className="divider mb-6" />
