@@ -38,7 +38,7 @@ export const SERVICES: Service[] = [
   {
     id: 'classic-haircut',
     name: 'Класическо Подстригване',
-    price: 15,
+      price: 10,
     durationMinutes: 30,
     description: 'Прецизно подстригване, съобразено с вашия стил. Включва измиване и оформяне.',
     icon: 'Scissors',
@@ -46,7 +46,7 @@ export const SERVICES: Service[] = [
   {
     id: 'fade-haircut',
     name: 'Подстригване Фейд',
-    price: 18,
+      price: 13,
     durationMinutes: 40,
     description: 'Модерен фейд с плавни преходи и перфектни линии. За тези, които искат стил.',
     icon: 'Zap',
@@ -54,7 +54,7 @@ export const SERVICES: Service[] = [
   {
     id: 'beard-trim',
     name: 'Оформяне на Брада',
-    price: 8,
+      price: 3,
     durationMinutes: 20,
     description: 'Експертно оформяне на брада с гореща кърпа и прецизни линии.',
     icon: 'Sparkles',
@@ -62,7 +62,7 @@ export const SERVICES: Service[] = [
   {
     id: 'combo',
     name: 'Прическа + Брада',
-    price: 25,
+      price: 18,
     durationMinutes: 45,
     description: 'Пълният пакет — подстригване и оформяне на брада. Излез като нов човек.',
     icon: 'Crown',
