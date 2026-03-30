@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Scissors, Sparkles, Crown, Zap, Clock, ArrowRight, Eye, Flame, Sparkle, Check } from 'lucide-react';
+import { Scissors, Sparkles, Crown, Zap, Clock, ArrowRight, Eye, Flame, Sparkle, Check, Star } from 'lucide-react';
 import { SERVICES, toLeva, getTotalPrice, getTotalDuration } from '@/lib/constants';
 import Card from '@/components/ui/Card';
 import Badge from '@/components/ui/Badge';
@@ -77,8 +77,9 @@ export default function SelectService({ selectedIds, onToggle, onNext }: SelectS
                     <div className="flex items-center gap-2 mb-1 flex-wrap pr-6">
                       <h4 className="font-heading font-bold text-sm uppercase text-white">{service.name}</h4>
                       {service.id === 'combo' && (
-                        <Badge variant="lime">
-                          Най-изгодно
+                        <Badge variant="lime" className="gap-1">
+                          <Star className="w-3 h-3 fill-lime" />
+                          Популярно
                         </Badge>
                       )}
                     </div>
