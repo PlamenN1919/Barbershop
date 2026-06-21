@@ -439,11 +439,13 @@ export async function checkForDuplicateBooking(
   };
 
   const allAppointments = await getAppointments();
+  const today = new Date().toISOString().split('T')[0];
   const customerBookings = allAppointments.filter(
     (apt) =>
       apt.status === 'upcoming' &&
-      (phonesMatch(apt.customerPhone, customerPhone) ||
-        namesMatch(apt.customerName, customerName))
+      apt.appointmentDate >= today &&
+      phonesMatch(apt.customerPhone, customerPhone) &&
+      namesMatch(apt.customerName, customerName)
   );
 
   result.existingBookings = customerBookings;
