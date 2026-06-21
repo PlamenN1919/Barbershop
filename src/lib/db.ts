@@ -136,9 +136,25 @@ export async function resetBarbers(): Promise<void> {
 // ============================================================
 
 export async function getAppointments(): Promise<Appointment[]> {
-  const { data, error } = await supabase.from('appointments').select('*');
-  if (error || !data) return [];
-  return data.map(mapAppointment);
+  // Supabase returns max 1000 rows by default — paginate to get all
+  const allRows: Record<string, unknown>[] = [];
+  const pageSize = 1000;
+  let from = 0;
+
+  while (true) {
+    const { data, error } = await supabase
+      .from('appointments')
+      .select('*')
+      .range(from, from + pageSize - 1)
+      .order('created_at', { ascending: false });
+
+    if (error || !data || data.length === 0) break;
+    allRows.push(...data);
+    if (data.length < pageSize) break;
+    from += pageSize;
+  }
+
+  return allRows.map(mapAppointment);
 }
 
 export async function saveAppointments(appointments: Appointment[]): Promise<void> {
