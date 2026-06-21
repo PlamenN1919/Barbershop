@@ -14,7 +14,7 @@ import {
   getAvailableDates,
 } from '@/lib/utils';
 import { checkConflict } from '@/lib/store';
-import { checkForDuplicateBooking, shouldBlockBooking } from '@/lib/antiSpam';
+import { checkForDuplicateBooking } from '@/lib/antiSpam';
 import { WORKING_HOURS, DAYS_AHEAD, SERVICES, toLeva, getServiceIdsFromAppointment } from '@/lib/constants';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
@@ -206,14 +206,6 @@ export default function CalendarView({ appointments, barbers, onUpdateStatus, on
     };
 
     const duplicateCheck = checkForDuplicateBooking(formData);
-
-    // Ако е блокирана напълно (rate limit)
-    if (shouldBlockBooking(duplicateCheck)) {
-      setFormError(
-        '⛔ ' + duplicateCheck.warnings.join('. ') + ' Препоръчваме проверка преди добавяне.'
-      );
-      return;
-    }
 
     // Ако е съмнителна или дублирана, питаме за потвърждение
     if (duplicateCheck.isDuplicate || duplicateCheck.isSuspicious) {
