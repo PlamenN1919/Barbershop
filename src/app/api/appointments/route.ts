@@ -79,21 +79,6 @@ export async function POST(request: NextRequest) {
     // Anti-spam check
     const spamCheck = await db.checkForDuplicateBooking(customerName, customerPhone, date, time);
 
-    // Block if rate limited — count only FUTURE upcoming bookings (date >= today)
-    const today = new Date().toISOString().split('T')[0];
-    const futureBookings = spamCheck.existingBookings.filter(
-      (apt) => apt.appointmentDate >= today
-    );
-    if (futureBookings.length >= 15) {
-      return NextResponse.json(
-        {
-          error: 'Достигнахте максималния брой резервации. Моля, свържете се с нас директно.',
-          blocked: true,
-        },
-        { status: 429 }
-      );
-    }
-
     // Create the appointment
     const isFlagged = spamCheck.isSuspicious || spamCheck.isDuplicate;
     const flagReason = spamCheck.warnings.length > 0 ? spamCheck.warnings.join('; ') : undefined;
